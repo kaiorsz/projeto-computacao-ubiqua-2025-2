@@ -1,27 +1,32 @@
-# Sistema UbÌquo de An·lise de Hemogramas
+![Java](https://img.shields.io/badge/Java-17-blue)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.2.0-green)
+<!-- ![Build](https://img.shields.io/github/actions/workflow/status/<org>/<repo>/maven.yml) -->
 
-Este projeto implementa um sistema para an·lise de hemogramas usando FHIR e computaÁ„o ubÌqua, conforme especificado na disciplina de Sistemas UbÌquos.
+# ü©∏ Sistema Ub√≠quo de An√°lise de Hemogramas
 
-## Vis„o Geral
+Este projeto implementa um sistema para an√°lise de hemogramas usando **FHIR** e **computa√ß√£o ub√≠qua**, desenvolvido no contexto da disciplina de **Sistemas Ub√≠quos**.
 
-O sistema È respons·vel por:
-- Receber mensagens FHIR via subscription (Marco 1)
-- Realizar an·lise individual de hemogramas com detecÁ„o de desvios (Marco 2)
-- Armazenar dados localmente (Marco 3)
-- Implementar an·lise coletiva com janelas deslizantes (Marco 4)
-- Fornecer API REST para consulta de alertas
-- Suportar aplicativo mÛvel Android com notificaÁıes
+## üìå Vis√£o Geral
 
-## Tecnologias Utilizadas
+O sistema √© respons√°vel por:
 
-- **Spring Boot 3.2.0** - Framework principal
-- **Java 17** - Linguagem de programaÁ„o
-- **H2 Database** - Banco de dados em memÛria (desenvolvimento)
-- **HAPI FHIR** - Biblioteca para manipulaÁ„o de recursos FHIR
-- **SpringDoc OpenAPI** - DocumentaÁ„o autom·tica da API
-- **JUnit 5** - Testes unit·rios
+- Receber mensagens FHIR via subscription (**Marco 1**)  
+- Realizar an√°lise individual de hemogramas com detec√ß√£o de desvios (**Marco 2**)  
+- Armazenar dados localmente (**Marco 3**)  
+- Implementar an√°lise coletiva com janelas deslizantes (**Marco 4**)  
+- Fornecer API REST para consulta de alertas  
+- Suportar aplicativo m√≥vel Android com notifica√ß√µes  
 
-## Estrutura do Projeto
+## üõ†Ô∏è Tecnologias Utilizadas
+
+- **Spring Boot 3.2.0** ‚Äì Framework principal  
+- **Java 17** ‚Äì Linguagem de programa√ß√£o  
+- **H2 Database** ‚Äì Banco de dados em mem√≥ria (desenvolvimento)  
+- **HAPI FHIR** ‚Äì Manipula√ß√£o de recursos FHIR  
+- **SpringDoc OpenAPI** ‚Äì Documenta√ß√£o autom√°tica da API  
+- **JUnit 5** ‚Äì Testes unit√°rios  
+
+## üìÇ Estrutura do Projeto
 
 ```
 src/
@@ -30,137 +35,41 @@ src/
 ?   ?   ??? controller/          # Controllers REST
 ?   ?   ??? dto/                 # Data Transfer Objects
 ?   ?   ??? model/               # Entidades JPA
-?   ?   ??? repository/          # RepositÛrios de dados
-?   ?   ??? service/             # LÛgica de negÛcio
-?   ?   ??? config/              # ConfiguraÁıes
-?   ?   ??? exception/           # ExceÁıes customizadas
+?   ?   ??? repository/          # Reposit√≥rios de dados
+?   ?   ??? service/             # L√≥gica de neg√≥cio
+?   ?   ??? config/              # Configura√ß√µes
+?   ?   ??? exception/           # Exce√ß√µes customizadas
 ?   ??? resources/
-?       ??? application.yml      # ConfiguraÁıes da aplicaÁ„o
-??? test/                        # Testes unit·rios
+?       ??? application.yml      # Configura√ß√µes da aplica√ß√£o
+??? test/                        # Testes unit√°rios
 ```
 
-## API REST - Endpoint de Alertas
+## üìÖ Marcos do Projeto    
 
-### Endpoints DisponÌveis
+- [] **Receptor FHIR via Subscription/Observation**
+- [] **An√°lise individual de hemogramas**
+- [] **Base de dados consolidada**
+- [] **An√°lise coletiva de hemogramas**
+- [] **API REST com endpoints funcionais**
+- [] **Aplicativo Android com notifica√ß√µes push**
+- [] **Testes automatizados**
+- [] **Medidas de seguran√ßa**
 
-#### 1. Listar Alertas
-```http
-GET /api/v1/alertas
-```
+## üìÇ Gest√£o do projeto
+Feita utilizando Github Projects, com um quadro Kanban. O projeto pode ser acessado para visualiza√ß√£o [aqui](https://github.com/users/eadaianne/projects/1)
 
-**Par‚metros de consulta:**
-- `page` (int): N˙mero da p·gina (padr„o: 0)
-- `size` (int): Tamanho da p·gina (padr„o: 20)
-- `sortBy` (string): Campo para ordenaÁ„o (padr„o: dataCriacao)
-- `sortDir` (string): DireÁ„o da ordenaÁ„o - ASC/DESC (padr„o: DESC)
-- `severidade` (enum): Filtrar por severidade (BAIXA, MEDIA, ALTA, CRITICA)
-- `parametro` (enum): Filtrar por par‚metro (LEUCOCITOS, HEMOGLOBINA, PLAQUETAS, HEMATOCRITO)
-- `patientId` (string): Filtrar por ID do paciente
-- `dataInicio` (datetime): Data inicial para filtro
-- `dataFim` (datetime): Data final para filtro
-- `apenasNaoProcessados` (boolean): Filtrar apenas alertas n„o processados
+## Endpoints API Rest
+  Os endpoints podem ser encontrados no arquivo [endpoints-api-REST.md](https://github.com/eadaianne/projeto-computacao-ubiqua-2025-2/blob/master/endpoints-api-REST.md)
 
-**Exemplo de resposta:**
-```json
-{
-  "content": [
-    {
-      "id": 1,
-      "hemogramaId": 100,
-      "fhirObservationId": "obs-hemograma-001",
-      "patientId": "patient-001",
-      "parametro": "LEUCOCITOS",
-      "nomeParametro": "LeucÛcitos",
-      "unidadeParametro": "/µL",
-      "valorEncontrado": 15000.0,
-      "valorMinimoReferencia": 4000.0,
-      "valorMaximoReferencia": 11000.0,
-      "tipoDesvio": "ACIMA_MAXIMO",
-      "severidade": "ALTA",
-      "dataCriacao": "2025-08-29T10:30:00",
-      "dataColeta": "2025-08-29T08:00:00",
-      "processado": false,
-      "percentualDesvio": 36.4,
-      "descricao": "LeucÛcitos acima do valor m·ximo de referÍncia (15000.00 /µL)"
-    }
-  ],
-  "totalElements": 1,
-  "totalPages": 1,
-  "size": 20,
-  "number": 0
-}
-```
+## üöÄ Como Executar
 
-#### 2. Buscar Alerta por ID
-```http
-GET /api/v1/alertas/{id}
-```
-
-#### 3. Marcar Alerta como Processado
-```http
-PUT /api/v1/alertas/{id}/processar
-```
-
-#### 4. Obter Resumo de Alertas
-```http
-GET /api/v1/alertas/resumo
-```
-
-**Exemplo de resposta:**
-```json
-{
-  "totalAlertas": 150,
-  "alertasNaoProcessados": 25,
-  "dataInicio": "2025-08-22T10:30:00",
-  "dataFim": "2025-08-29T10:30:00",
-  "alertasPorSeveridade": {
-    "ALTA": 45,
-    "MEDIA": 60,
-    "BAIXA": 30,
-    "CRITICA": 15
-  },
-  "alertasPorParametro": {
-    "LEUCOCITOS": 40,
-    "HEMOGLOBINA": 35,
-    "PLAQUETAS": 45,
-    "HEMATOCRITO": 30
-  },
-  "alertasPorTipoDesvio": {
-    "ACIMA_MAXIMO": 85,
-    "ABAIXO_MINIMO": 65
-  },
-  "totalPacientesComAlertas": 45,
-  "mediaAlertasPorPaciente": 3.33,
-  "parametroMaisFrequente": "PLAQUETAS",
-  "severidadeMaisComum": "MEDIA"
-}
-```
-
-#### 5. Listar Alertas por Paciente
-```http
-GET /api/v1/alertas/paciente/{patientId}
-```
-
-## Valores de ReferÍncia
-
-Conforme especificaÁ„o do projeto, os seguintes valores s„o utilizados para detecÁ„o de desvios:
-
-| Par‚metro    | Unidade | Valor MÌnimo | Valor M·ximo |
-|--------------|---------|--------------|--------------|
-| LeucÛcitos   | /µL     | 4.000        | 11.000       |
-| Hemoglobina  | g/dL    | 12.0         | 17.5         |
-| Plaquetas    | /µL     | 150.000      | 450.000      |
-| HematÛcrito  | %       | 36           | 52           |
-
-## Como Executar
-
-### PrÈ-requisitos
+### Pr√©-requisitos
 - Java 17 ou superior
 - Maven 3.6 ou superior
 
-### Executando a aplicaÁ„o
+### Executando a aplica√ß√£o
 ```bash
-# Clonar o repositÛrio
+# Clonar o reposit√≥rio
 git clone <url-do-repositorio>
 cd projeto-computacao-ubiqua-2025-2
 
@@ -168,7 +77,7 @@ cd projeto-computacao-ubiqua-2025-2
 mvn spring-boot:run
 ```
 
-### Acessando a aplicaÁ„o
+### Acessando a aplica√ß√£o
 - **API Base URL**: http://localhost:8080/hemograma-api
 - **Swagger UI**: http://localhost:8080/hemograma-api/swagger-ui.html
 - **Console H2**: http://localhost:8080/hemograma-api/h2-console
@@ -178,26 +87,16 @@ mvn spring-boot:run
 mvn test
 ```
 
-## DocumentaÁ„o da API
+## üìñ Documenta√ß√£o da API
 
-A documentaÁ„o completa da API est· disponÌvel atravÈs do Swagger UI quando a aplicaÁ„o estiver em execuÁ„o.
+A documenta√ß√£o completa da API est√° dispon√≠vel atrav√©s do Swagger UI quando a aplica√ß√£o estiver em execu√ß√£o.
 
-## PrÛximos Passos
+## üîí Seguran√ßa (planejado)
 
-Para completar os marcos do projeto:
+- [] Comunica√ß√£o via HTTPS
+- [] Autentica√ß√£o mTLS entre servi√ßos
+- [] N√£o armazenamento de dados pessoais identific√°veis
 
-1. **Marco 1**: Implementar receptor FHIR Subscription
-2. **Marco 3**: Configurar banco de dados persistente
-3. **Marco 4**: Implementar an·lise coletiva com janelas deslizantes
-4. **Aplicativo MÛvel**: Desenvolver app Android
-5. **SeguranÁa**: Implementar HTTPS com mTLS
+## Contribui√ß√£o
 
-## ContribuiÁ„o
-
-Este projeto faz parte da disciplina de Sistemas UbÌquos. Para contribuir:
-
-1. FaÁa um fork do projeto
-2. Crie uma branch para sua feature
-3. Commit suas mudanÁas
-4. Push para a branch
-5. Abra um Pull Request
+Este projeto faz parte da disciplina de Sistemas Ub√≠quos. Contribui√ß√µes devem ser feitas seguindo as orienta√ß√µes em [contributing.md](https://github.com/eadaianne/projeto-computacao-ubiqua-2025-2/blob/master/contributing.md)
