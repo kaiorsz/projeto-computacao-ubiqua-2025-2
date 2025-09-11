@@ -55,6 +55,9 @@ src/
 - [] **Testes automatizados**
 - [] **Medidas de segurança**
 
+## 📂 Gestão do projeto
+Feita utilizando Github Projects, com um quadro Kanban. O projeto pode ser acessado para visualização [aqui](https://github.com/users/eadaianne/projects/1)
+
 ## Endpoints API Rest
   Os endpoints podem ser encontrados no arquivo [endpoints-api-REST.md](https://github.com/eadaianne/projeto-computacao-ubiqua-2025-2/blob/master/endpoints-api-REST.md)
 
