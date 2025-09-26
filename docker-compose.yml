@@ -1,30 +1,37 @@
-version: '3.8'
+# Remova a linha `version: '3.7'` para evitar o aviso.
 
 services:
-  hapi-fhir:
+  # Serviço do servidor HAPI-FHIR
+  fhir:
+    container_name: hapi-fhir-jpaserver-start
     image: hapiproject/hapi:latest
-    container_name: hapi-fhir-server
-    ports:
-      - "8080:8080" # HAPI-FHIR acessível em http://localhost:8080
+    restart: on-failure
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/hapi
-      SPRING_DATASOURCE_USERNAME: admin
-      SPRING_DATASOURCE_PASSWORD: admin
+      - hapi.fhir.datasource.url=jdbc:postgresql://db:5432/hapi
+      - hapi.fhir.datasource.username=admin
+      - hapi.fhir.datasource.password=admin
+      - hapi.fhir.datasource.driverClassName=org.postgresql.Driver
+      - hapi.fhir.jpa.hibernate.dialect=ca.uhn.fhir.jpa.model.dialect.HapiFhirPostgresDialect
+      - hapi.fhir.subscription.resthook_enabled=true
+      - hapi.fhir.subscription.websocket_enabled=true
+    ports:
+      - "8080:8080"
     depends_on:
       - db
 
+  # Serviço do banco de dados PostgreSQL
   db:
-    image: postgres:15
-    container_name: hapi-fhir-db
+    image: postgres:15-alpine
+    container_name: hapi-fhir-postgres
     restart: always
     environment:
       POSTGRES_DB: hapi
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin
-    ports:
-      - "5432:5432" # PostgreSQL acessível em localhost:5432
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      # Use o nome do volume definido abaixo
+      - hapi-fhir-postgres-data:/var/lib/postgresql/data
 
+# A definição do volume deve estar no mesmo nível de "services"
 volumes:
-  postgres_data:
+  hapi-fhir-postgres-data:
