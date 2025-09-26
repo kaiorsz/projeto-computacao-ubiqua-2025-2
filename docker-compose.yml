@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  hapi-fhir:
+    image: hapiproject/hapi:latest
+    container_name: hapi-fhir-server
+    ports:
+      - "8080:8080" # HAPI-FHIR acessível em http://localhost:8080
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/hapi
+      SPRING_DATASOURCE_USERNAME: admin
+      SPRING_DATASOURCE_PASSWORD: admin
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15
+    container_name: hapi-fhir-db
+    restart: always
+    environment:
+      POSTGRES_DB: hapi
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+    ports:
+      - "5432:5432" # PostgreSQL acessível em localhost:5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
