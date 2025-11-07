@@ -34,9 +34,10 @@ public class FhirSubscriptionService {
      */
     public String criarSubscriptionHemograma() {
         logger.info("Criando subscription para hemogramas no servidor FHIR: {}", fhirServerUrl);
-        
+
         try {
             // Monta o endpoint da aplicação
+            // Usa host.docker.internal para o HAPI-FHIR (dentro do Docker) acessar a aplicação (no host)
             String endpointUrl = String.format("http://host.docker.internal:%s/hemograma-api/hemogramas/receber", applicationPort);
             
             // Cria o JSON da subscription

@@ -27,18 +27,25 @@ public class FhirSubscriptionController {
     /**
      * Endpoint que recebe notificações do HAPI-FHIR quando uma nova Observation
      * correspondente aos critérios da subscription é criada.
-     * 
+     *
+     * IMPORTANTE: HAPI-FHIR pode enviar POST ou PUT dependendo da configuração
+     *
      * @param payload Dados da notificação enviados pelo HAPI-FHIR
      * @return ResponseEntity indicando o status do processamento
      */
     @PostMapping("/receber")
+    @PutMapping("/receber")
     public ResponseEntity<Map<String, String>> receberNotificacaoHemograma(
-            @RequestBody String payload,
+            @RequestBody(required = false) String payload,
             @RequestHeader Map<String, String> headers) {
-        
+
+        System.out.println("========================================");
+        System.out.println("🔔 NOTIFICAÇÃO RECEBIDA DO HAPI-FHIR!");
+        System.out.println("Método HTTP: " + headers.getOrDefault("method", "UNKNOWN"));
+        System.out.println("========================================");
         logger.info("Recebida notificação FHIR para novo hemograma");
-        logger.debug("Headers recebidos: {}", headers);
-        logger.debug("Payload recebido: {}", payload);
+        logger.info("Headers recebidos: {}", headers);
+        logger.info("Payload recebido: {}", payload);
 
         try {
             // Processa a notificação recebida
@@ -68,11 +75,72 @@ public class FhirSubscriptionController {
      */
     @GetMapping("/status")
     public ResponseEntity<Map<String, String>> verificarStatus() {
+        logger.info("Endpoint /status acessado");
         return ResponseEntity.ok(Map.of(
             "status", "active",
             "service", "FHIR Subscription Receiver",
             "message", "Serviço ativo e pronto para receber notificações"
         ));
+    }
+
+    /**
+     * Endpoint de teste para verificar se o HAPI-FHIR consegue acessar a aplicação.
+     * Este endpoint registra no log quando é acessado.
+     */
+    @GetMapping("/ping")
+    public ResponseEntity<Map<String, String>> ping() {
+        System.out.println("========================================");
+        System.out.println("🏓 PING RECEBIDO!");
+        System.out.println("========================================");
+        logger.info("Endpoint /ping acessado - HAPI-FHIR consegue acessar a aplicação!");
+        return ResponseEntity.ok(Map.of(
+            "status", "pong",
+            "message", "Aplicação acessível",
+            "timestamp", java.time.Instant.now().toString()
+        ));
+    }
+
+    /**
+     * Endpoint alternativo que aceita PUT com path variable.
+     * HAPI-FHIR pode enviar notificações como PUT /receber/{resourceType}/{id}
+     */
+    @PutMapping("/receber/{resourceType}/{id}")
+    public ResponseEntity<Map<String, String>> receberNotificacaoComPath(
+            @PathVariable String resourceType,
+            @PathVariable String id,
+            @RequestBody(required = false) String payload,
+            @RequestHeader Map<String, String> headers) {
+
+        System.out.println("========================================");
+        System.out.println("🔔 NOTIFICAÇÃO RECEBIDA (PUT com path)!");
+        System.out.println("Resource: " + resourceType + "/" + id);
+        System.out.println("========================================");
+        logger.info("Recebida notificação FHIR via PUT para {}/{}", resourceType, id);
+        logger.info("Headers recebidos: {}", headers);
+        logger.info("Payload recebido: {}", payload);
+
+        try {
+            // Processa a notificação recebida
+            hemogramaProcessingService.processarNotificacaoFhir(payload, headers);
+
+            logger.info("Notificação FHIR processada com sucesso");
+
+            return ResponseEntity.ok(Map.of(
+                "status", "success",
+                "message", "Notificação processada com sucesso",
+                "resourceType", resourceType,
+                "resourceId", id
+            ));
+
+        } catch (Exception e) {
+            logger.error("Erro ao processar notificação FHIR: {}", e.getMessage(), e);
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of(
+                    "status", "error",
+                    "message", "Erro ao processar notificação: " + e.getMessage()
+                ));
+        }
     }
 
     /**
