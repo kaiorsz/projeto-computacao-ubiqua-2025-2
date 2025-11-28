@@ -1,10 +1,15 @@
+# ============================================
+# Configuration for Docker environment
+# ============================================
+# This file is activated when SPRING_PROFILES_ACTIVE=docker
+
 spring:
   application:
     name: hemograma-ubiquo
   
-  # H2 Database configuration (for development)
+  # H2 Database configuration (file-based for persistence)
   datasource:
-    url: jdbc:h2:mem:hemograma_db;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    url: jdbc:h2:file:/app/data/hemograma_db;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
     driver-class-name: org.h2.Driver
     username: sa
     password: 
@@ -13,14 +18,13 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
-      ddl-auto: create-drop
-    show-sql: true
+      ddl-auto: update
+    show-sql: false
     properties:
       hibernate:
-        format_sql: true
-        use_sql_comments: true
+        format_sql: false
   
-  # H2 Console (development only)
+  # H2 Console (enabled for debug)
   h2:
     console:
       enabled: true
@@ -51,21 +55,19 @@ springdoc:
     tags-sorter: alpha
   show-actuator: false
 
-# Logging configuration
+# Logging configuration (less verbose for Docker)
 logging:
   level:
-    br.ufg.inf.hemograma: DEBUG
-    org.springframework.web: INFO
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    br.ufg.inf.hemograma: INFO
+    org.springframework.web: WARN
+    org.hibernate.SQL: WARN
   pattern:
-    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
-    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
 
 # Application specific settings
 app:
   hemograma:
-    # Reference values for analysis (as per project specification)
+    # Reference values for analysis
     valores-referencia:
       leucocitos:
         minimo: 4000.0
@@ -90,14 +92,14 @@ app:
       limite-alertas-criticos: 5
       percentual-desvio-critico: 50.0
     
-    # FHIR settings
+    # FHIR settings - Using Docker service name
     fhir:
-      server-url: "http://localhost:8080/fhir"
+      server-url: "http://fhir:8080/fhir"
       subscription-endpoint: "/Subscription"
       observation-endpoint: "/Observation"
       timeout-seconds: 30
 
-# Actuator/Management configuration (basic for development)
+# Actuator/Management configuration
 management:
   endpoints:
     web:
@@ -105,5 +107,5 @@ management:
         include: health,info,metrics
   endpoint:
     health:
-      show-details: when_authorized
+      show-details: always
 

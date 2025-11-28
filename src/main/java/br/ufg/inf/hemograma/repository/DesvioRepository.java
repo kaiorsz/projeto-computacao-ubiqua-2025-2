@@ -32,8 +32,12 @@ public interface DesvioRepository extends JpaRepository<Desvio, Long> {
     @Query("SELECT COUNT(d) FROM Desvio d WHERE d.severidade = :severidade AND d.dataDeteccao >= :dataInicio")
     Long countBySeveridadeEDataDeteccaoApos(@Param("severidade") SeveridadeDesvio severidade,
                                              @Param("dataInicio") LocalDateTime dataInicio);
-    
+
     List<Desvio> findByNotificacaoEnviada(Boolean notificacaoEnviada);
 
+    @Query("SELECT d FROM Desvio d WHERE d.tipoParametro = :tipo AND d.dataDeteccao BETWEEN :inicio AND :fim")
+    List<Desvio> findByTipoParametroAndDataCriacaoBetween(@Param("tipo") TipoParametro tipo,
+                                                           @Param("inicio") LocalDateTime inicio,
+                                                           @Param("fim") LocalDateTime fim);
 }
 

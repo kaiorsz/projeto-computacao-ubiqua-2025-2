@@ -30,5 +30,7 @@ public interface HemogramaRepository extends JpaRepository<Hemograma, Long> {
     List<Hemograma> findByPacienteEDataColetaApos(@Param("paciente") Paciente paciente,
                                                     @Param("dataInicio") LocalDateTime dataInicio);
 
+    @Query("SELECT COUNT(h) FROM Hemograma h WHERE h.dataCadastro BETWEEN :inicio AND :fim")
+    long countByDataCadastroBetween(@Param("inicio") LocalDateTime inicio, @Param("fim") LocalDateTime fim);
 }
 

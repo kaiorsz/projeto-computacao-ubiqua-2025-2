@@ -1,0 +1,470 @@
+{
+  "info": {
+    "name": "Hemograma Ubiquo API",
+    "description": "Collection para testar a API do Sistema de Analise de Hemogramas - UFG",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8081/hemograma-api",
+      "type": "string"
+    },
+    {
+      "key": "fhirUrl",
+      "value": "http://localhost:8080/fhir",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "item": [
+        {
+          "name": "Health Check - Aplicacao",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/actuator/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["actuator", "health"]
+            },
+            "description": "Verifica se a aplicacao Spring Boot esta rodando"
+          }
+        },
+        {
+          "name": "Health Check - HAPI-FHIR",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{fhirUrl}}/metadata",
+              "host": ["{{fhirUrl}}"],
+              "path": ["metadata"]
+            },
+            "description": "Verifica se o servidor HAPI-FHIR esta rodando"
+          }
+        }
+      ]
+    },
+    {
+      "name": "FHIR Management",
+      "item": [
+        {
+          "name": "Criar Subscription",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/fhir-management/subscription/criar",
+              "host": ["{{baseUrl}}"],
+              "path": ["fhir-management", "subscription", "criar"]
+            },
+            "description": "Cria uma subscription no HAPI-FHIR para receber notificacoes de novos hemogramas"
+          }
+        },
+        {
+          "name": "Verificar Status Subscription",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/fhir-management/subscription/1/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["fhir-management", "subscription", "1", "status"]
+            },
+            "description": "Verifica o status de uma subscription especifica"
+          }
+        },
+        {
+          "name": "Listar Subscriptions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/fhir-management/subscriptions",
+              "host": ["{{baseUrl}}"],
+              "path": ["fhir-management", "subscriptions"]
+            },
+            "description": "Lista todas as subscriptions ativas no servidor FHIR"
+          }
+        }
+      ]
+    },
+    {
+      "name": "HAPI-FHIR - Pacientes",
+      "item": [
+        {
+          "name": "Criar Paciente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/fhir+json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resourceType\": \"Patient\",\n  \"name\": [\n    {\n      \"family\": \"Silva\",\n      \"given\": [\"Joao\", \"Carlos\"]\n    }\n  ],\n  \"gender\": \"male\",\n  \"birthDate\": \"1985-03-15\",\n  \"telecom\": [\n    {\n      \"system\": \"phone\",\n      \"value\": \"(62) 99999-1234\"\n    }\n  ],\n  \"address\": [\n    {\n      \"city\": \"Goiania\",\n      \"state\": \"GO\",\n      \"country\": \"Brasil\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{fhirUrl}}/Patient",
+              "host": ["{{fhirUrl}}"],
+              "path": ["Patient"]
+            },
+            "description": "Cria um novo paciente no servidor FHIR"
+          }
+        },
+        {
+          "name": "Listar Pacientes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{fhirUrl}}/Patient?_pretty=true",
+              "host": ["{{fhirUrl}}"],
+              "path": ["Patient"],
+              "query": [
+                {
+                  "key": "_pretty",
+                  "value": "true"
+                }
+              ]
+            },
+            "description": "Lista todos os pacientes cadastrados"
+          }
+        },
+        {
+          "name": "Buscar Paciente por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{fhirUrl}}/Patient/2?_pretty=true",
+              "host": ["{{fhirUrl}}"],
+              "path": ["Patient", "1"],
+              "query": [
+                {
+                  "key": "_pretty",
+                  "value": "true"
+                }
+              ]
+            },
+            "description": "Busca um paciente especifico pelo ID"
+          }
+        }
+      ]
+    },
+    {
+      "name": "HAPI-FHIR - Observations (Hemogramas)",
+      "item": [
+        {
+          "name": "Criar Observation - Hemoglobina NORMAL",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/fhir+json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resourceType\": \"Observation\",\n  \"status\": \"final\",\n  \"category\": [\n    {\n      \"coding\": [\n        {\n          \"system\": \"http://terminology.hl7.org/CodeSystem/observation-category\",\n          \"code\": \"laboratory\",\n          \"display\": \"Laboratory\"\n        }\n      ]\n    }\n  ],\n  \"code\": {\n    \"coding\": [\n      {\n        \"system\": \"http://loinc.org\",\n        \"code\": \"718-7\",\n        \"display\": \"Hemoglobin [Mass/volume] in Blood\"\n      }\n    ]\n  },\n  \"subject\": {\n    \"reference\": \"Patient/2\"\n  },\n  \"effectiveDateTime\": \"2024-01-15T10:30:00Z\",\n  \"valueQuantity\": {\n    \"value\": 14.5,\n    \"unit\": \"g/dL\",\n    \"system\": \"http://unitsofmeasure.org\",\n    \"code\": \"g/dL\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{fhirUrl}}/Observation",
+              "host": ["{{fhirUrl}}"],
+              "path": ["Observation"]
+            },
+            "description": "Cria uma observation de hemoglobina com valor NORMAL (14.5 g/dL). Referencia: 12.0 - 17.5 g/dL"
+          }
+        },
+        {
+          "name": "Criar Observation - Hemoglobina BAIXA (Anemia)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/fhir+json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resourceType\": \"Observation\",\n  \"status\": \"final\",\n  \"category\": [\n    {\n      \"coding\": [\n        {\n          \"system\": \"http://terminology.hl7.org/CodeSystem/observation-category\",\n          \"code\": \"laboratory\",\n          \"display\": \"Laboratory\"\n        }\n      ]\n    }\n  ],\n  \"code\": {\n    \"coding\": [\n      {\n        \"system\": \"http://loinc.org\",\n        \"code\": \"718-7\",\n        \"display\": \"Hemoglobin [Mass/volume] in Blood\"\n      }\n    ]\n  },\n  \"subject\": {\n    \"reference\": \"Patient/2\"\n  },\n  \"effectiveDateTime\": \"2024-01-15T10:30:00Z\",\n  \"valueQuantity\": {\n    \"value\": 8.5,\n    \"unit\": \"g/dL\",\n    \"system\": \"http://unitsofmeasure.org\",\n    \"code\": \"g/dL\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{fhirUrl}}/Observation",
+              "host": ["{{fhirUrl}}"],
+              "path": ["Observation"]
+            },
+            "description": "Cria uma observation de hemoglobina com valor BAIXO (8.5 g/dL) indicando anemia. Referencia: 12.0 - 17.5 g/dL"
+          }
+        },
+        {
+          "name": "Criar Observation - Leucocitos NORMAL",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/fhir+json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resourceType\": \"Observation\",\n  \"status\": \"final\",\n  \"category\": [\n    {\n      \"coding\": [\n        {\n          \"system\": \"http://terminology.hl7.org/CodeSystem/observation-category\",\n          \"code\": \"laboratory\",\n          \"display\": \"Laboratory\"\n        }\n      ]\n    }\n  ],\n  \"code\": {\n    \"coding\": [\n      {\n        \"system\": \"http://loinc.org\",\n        \"code\": \"6690-2\",\n        \"display\": \"Leukocytes [#/volume] in Blood\"\n      }\n    ]\n  },\n  \"subject\": {\n    \"reference\": \"Patient/2\"\n  },\n  \"effectiveDateTime\": \"2024-01-15T10:30:00Z\",\n  \"valueQuantity\": {\n    \"value\": 7500,\n    \"unit\": \"/uL\",\n    \"system\": \"http://unitsofmeasure.org\",\n    \"code\": \"/uL\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{fhirUrl}}/Observation",
+              "host": ["{{fhirUrl}}"],
+              "path": ["Observation"]
+            },
+            "description": "Cria uma observation de leucocitos com valor NORMAL (7500 /uL). Referencia: 4000 - 11000 /uL"
+          }
+        },
+        {
+          "name": "Criar Observation - Leucocitos ALTO (Leucocitose)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/fhir+json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resourceType\": \"Observation\",\n  \"status\": \"final\",\n  \"category\": [\n    {\n      \"coding\": [\n        {\n          \"system\": \"http://terminology.hl7.org/CodeSystem/observation-category\",\n          \"code\": \"laboratory\",\n          \"display\": \"Laboratory\"\n        }\n      ]\n    }\n  ],\n  \"code\": {\n    \"coding\": [\n      {\n        \"system\": \"http://loinc.org\",\n        \"code\": \"6690-2\",\n        \"display\": \"Leukocytes [#/volume] in Blood\"\n      }\n    ]\n  },\n  \"subject\": {\n    \"reference\": \"Patient/2\"\n  },\n  \"effectiveDateTime\": \"2024-01-15T10:30:00Z\",\n  \"valueQuantity\": {\n    \"value\": 18000,\n    \"unit\": \"/uL\",\n    \"system\": \"http://unitsofmeasure.org\",\n    \"code\": \"/uL\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{fhirUrl}}/Observation",
+              "host": ["{{fhirUrl}}"],
+              "path": ["Observation"]
+            },
+            "description": "Cria uma observation de leucocitos com valor ALTO (18000 /uL) indicando leucocitose. Referencia: 4000 - 11000 /uL"
+          }
+        },
+        {
+          "name": "Criar Observation - Plaquetas NORMAL",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/fhir+json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resourceType\": \"Observation\",\n  \"status\": \"final\",\n  \"category\": [\n    {\n      \"coding\": [\n        {\n          \"system\": \"http://terminology.hl7.org/CodeSystem/observation-category\",\n          \"code\": \"laboratory\",\n          \"display\": \"Laboratory\"\n        }\n      ]\n    }\n  ],\n  \"code\": {\n    \"coding\": [\n      {\n        \"system\": \"http://loinc.org\",\n        \"code\": \"777-3\",\n        \"display\": \"Platelets [#/volume] in Blood\"\n      }\n    ]\n  },\n  \"subject\": {\n    \"reference\": \"Patient/2\"\n  },\n  \"effectiveDateTime\": \"2024-01-15T10:30:00Z\",\n  \"valueQuantity\": {\n    \"value\": 250000,\n    \"unit\": \"/uL\",\n    \"system\": \"http://unitsofmeasure.org\",\n    \"code\": \"/uL\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{fhirUrl}}/Observation",
+              "host": ["{{fhirUrl}}"],
+              "path": ["Observation"]
+            },
+            "description": "Cria uma observation de plaquetas com valor NORMAL (250000 /uL). Referencia: 150000 - 450000 /uL"
+          }
+        },
+        {
+          "name": "Criar Observation - Plaquetas BAIXA (Trombocitopenia)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/fhir+json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resourceType\": \"Observation\",\n  \"status\": \"final\",\n  \"category\": [\n    {\n      \"coding\": [\n        {\n          \"system\": \"http://terminology.hl7.org/CodeSystem/observation-category\",\n          \"code\": \"laboratory\",\n          \"display\": \"Laboratory\"\n        }\n      ]\n    }\n  ],\n  \"code\": {\n    \"coding\": [\n      {\n        \"system\": \"http://loinc.org\",\n        \"code\": \"777-3\",\n        \"display\": \"Platelets [#/volume] in Blood\"\n      }\n    ]\n  },\n  \"subject\": {\n    \"reference\": \"Patient/2\"\n  },\n  \"effectiveDateTime\": \"2024-01-15T10:30:00Z\",\n  \"valueQuantity\": {\n    \"value\": 80000,\n    \"unit\": \"/uL\",\n    \"system\": \"http://unitsofmeasure.org\",\n    \"code\": \"/uL\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{fhirUrl}}/Observation",
+              "host": ["{{fhirUrl}}"],
+              "path": ["Observation"]
+            },
+            "description": "Cria uma observation de plaquetas com valor BAIXO (80000 /uL) indicando trombocitopenia. Referencia: 150000 - 450000 /uL"
+          }
+        },
+        {
+          "name": "Criar Observation - Hematocrito NORMAL",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/fhir+json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resourceType\": \"Observation\",\n  \"status\": \"final\",\n  \"category\": [\n    {\n      \"coding\": [\n        {\n          \"system\": \"http://terminology.hl7.org/CodeSystem/observation-category\",\n          \"code\": \"laboratory\",\n          \"display\": \"Laboratory\"\n        }\n      ]\n    }\n  ],\n  \"code\": {\n    \"coding\": [\n      {\n        \"system\": \"http://loinc.org\",\n        \"code\": \"4544-3\",\n        \"display\": \"Hematocrit [Volume Fraction] of Blood\"\n      }\n    ]\n  },\n  \"subject\": {\n    \"reference\": \"Patient/2\"\n  },\n  \"effectiveDateTime\": \"2024-01-15T10:30:00Z\",\n  \"valueQuantity\": {\n    \"value\": 42,\n    \"unit\": \"%\",\n    \"system\": \"http://unitsofmeasure.org\",\n    \"code\": \"%\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{fhirUrl}}/Observation",
+              "host": ["{{fhirUrl}}"],
+              "path": ["Observation"]
+            },
+            "description": "Cria uma observation de hematocrito com valor NORMAL (42%). Referencia: 36 - 52%"
+          }
+        },
+        {
+          "name": "Criar Observation - Hematocrito BAIXO",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/fhir+json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resourceType\": \"Observation\",\n  \"status\": \"final\",\n  \"category\": [\n    {\n      \"coding\": [\n        {\n          \"system\": \"http://terminology.hl7.org/CodeSystem/observation-category\",\n          \"code\": \"laboratory\",\n          \"display\": \"Laboratory\"\n        }\n      ]\n    }\n  ],\n  \"code\": {\n    \"coding\": [\n      {\n        \"system\": \"http://loinc.org\",\n        \"code\": \"4544-3\",\n        \"display\": \"Hematocrit [Volume Fraction] of Blood\"\n      }\n    ]\n  },\n  \"subject\": {\n    \"reference\": \"Patient/2\"\n  },\n  \"effectiveDateTime\": \"2024-01-15T10:30:00Z\",\n  \"valueQuantity\": {\n    \"value\": 28,\n    \"unit\": \"%\",\n    \"system\": \"http://unitsofmeasure.org\",\n    \"code\": \"%\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{fhirUrl}}/Observation",
+              "host": ["{{fhirUrl}}"],
+              "path": ["Observation"]
+            },
+            "description": "Cria uma observation de hematocrito com valor BAIXO (28%). Referencia: 36 - 52%"
+          }
+        },
+        {
+          "name": "Listar Observations",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{fhirUrl}}/Observation?_pretty=true",
+              "host": ["{{fhirUrl}}"],
+              "path": ["Observation"],
+              "query": [
+                {
+                  "key": "_pretty",
+                  "value": "true"
+                }
+              ]
+            },
+            "description": "Lista todas as observations cadastradas"
+          }
+        },
+        {
+          "name": "Buscar Observation por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{fhirUrl}}/Observation/1?_pretty=true",
+              "host": ["{{fhirUrl}}"],
+              "path": ["Observation", "1"],
+              "query": [
+                {
+                  "key": "_pretty",
+                  "value": "true"
+                }
+              ]
+            },
+            "description": "Busca uma observation especifica pelo ID"
+          }
+        },
+        {
+          "name": "Buscar Observations por Paciente",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{fhirUrl}}/Observation?subject=Patient/2&_pretty=true",
+              "host": ["{{fhirUrl}}"],
+              "path": ["Observation"],
+              "query": [
+                {
+                  "key": "subject",
+                  "value": "Patient/2"
+                },
+                {
+                  "key": "_pretty",
+                  "value": "true"
+                }
+              ]
+            },
+            "description": "Busca todas as observations de um paciente especifico"
+          }
+        },
+        {
+          "name": "Buscar Observations por Codigo LOINC",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{fhirUrl}}/Observation?code=718-7&_pretty=true",
+              "host": ["{{fhirUrl}}"],
+              "path": ["Observation"],
+              "query": [
+                {
+                  "key": "code",
+                  "value": "718-7"
+                },
+                {
+                  "key": "_pretty",
+                  "value": "true"
+                }
+              ]
+            },
+            "description": "Busca observations por codigo LOINC (718-7 = Hemoglobina)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "HAPI-FHIR - Subscriptions",
+      "item": [
+        {
+          "name": "Listar Subscriptions no FHIR",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{fhirUrl}}/Subscription?_pretty=true",
+              "host": ["{{fhirUrl}}"],
+              "path": ["Subscription"],
+              "query": [
+                {
+                  "key": "_pretty",
+                  "value": "true"
+                }
+              ]
+            },
+            "description": "Lista todas as subscriptions diretamente no servidor FHIR"
+          }
+        },
+        {
+          "name": "Buscar Subscription por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{fhirUrl}}/Subscription/1?_pretty=true",
+              "host": ["{{fhirUrl}}"],
+              "path": ["Subscription", "1"],
+              "query": [
+                {
+                  "key": "_pretty",
+                  "value": "true"
+                }
+              ]
+            },
+            "description": "Busca uma subscription especifica pelo ID"
+          }
+        }
+      ]
+    }
+  ]
+}
+

@@ -23,6 +23,9 @@ public class AnalisadorHemogramaService {
     @Autowired
     private ValoresReferenciaService valoresReferenciaService;
 
+    @Autowired
+    private NotificacaoService notificacaoService;
+
     public List<Desvio> analisarHemograma(Hemograma hemograma, Paciente paciente) {
         List<Desvio> desvios = new ArrayList<>();
 
@@ -33,6 +36,7 @@ public class AnalisadorHemogramaService {
                 desvios.add(desvio);
                 hemograma.adicionarDesvio(desvio);
                 logger.warn("⚠️ {}", desvio.getDescricao());
+                notificacaoService.enviarNotificacaoDesvioIndividual(desvio);
             }
         }
 
@@ -40,8 +44,9 @@ public class AnalisadorHemogramaService {
     }
 
     /**
-     * LÓGICA DE IDENTIFICAÇÃO DE ANEMIA:
-     * - Se Hemoglobina < Limite Inferior (VR Mínimo) → "Baixa (Anemia)"
+     * LOGICA DE IDENTIFICACAO:
+     * - Hemoglobina < Limite Inferior -> Anemia
+     * - Plaquetas < 150000 -> Plaquetopenia
      */
     private Desvio analisarParametro(ParametroHemograma parametro, Paciente paciente) {
         TipoParametro tipo = parametro.getTipoParametro();
@@ -89,44 +94,37 @@ public class AnalisadorHemogramaService {
         }
     }
     
-    /**
-     * Gera descrição detalhada do desvio.
-     * 
-     * ESPECIFICAÇÃO DE ANEMIA:
-     * - Hemoglobina abaixo do limite → "Baixa (Anemia)"
-     */
-    private String gerarDescricao(TipoParametro tipo, Double valor, FaixaReferencia faixa, 
+    private String gerarDescricao(TipoParametro tipo, Double valor, FaixaReferencia faixa,
                                    Double percentualDesvio, Paciente paciente) {
         StringBuilder desc = new StringBuilder();
-        
-        // Identificar se é ANEMIA (conforme especificação)
+
         if (tipo == TipoParametro.HEMOGLOBINA && valor < faixa.getMinimo()) {
-            desc.append("🩸 ANEMIA DETECTADA: ");
+            desc.append("ANEMIA: ");
             desc.append(String.format("Hemoglobina BAIXA (%.1f g/dL). ", valor));
-            desc.append(String.format("Valor de referência para %s: %.1f - %.1f g/dL. ",
-                                      obterDescricaoGenero(paciente),
-                                      faixa.getMinimo(),
-                                      faixa.getMaximo()));
-            desc.append(String.format("Desvio de %.1f%% abaixo do limite mínimo.", percentualDesvio));
+            desc.append(String.format("Referencia: %.1f - %.1f g/dL. ", faixa.getMinimo(), faixa.getMaximo()));
+            desc.append(String.format("Desvio: %.1f%%", percentualDesvio));
             return desc.toString();
         }
-        
-        // Outros desvios
+
+        if (tipo == TipoParametro.PLAQUETAS && valor < faixa.getMinimo()) {
+            desc.append("PLAQUETOPENIA: ");
+            desc.append(String.format("Plaquetas BAIXAS (%.0f /uL). ", valor));
+            desc.append(String.format("Referencia: %.0f - %.0f /uL. ", faixa.getMinimo(), faixa.getMaximo()));
+            desc.append(String.format("Desvio: %.1f%%", percentualDesvio));
+            return desc.toString();
+        }
+
         desc.append(tipo.getNome()).append(": ");
-        
+
         if (valor < faixa.getMinimo()) {
             desc.append(String.format("BAIXO (%.2f %s). ", valor, faixa.getUnidade()));
         } else {
             desc.append(String.format("ALTO (%.2f %s). ", valor, faixa.getUnidade()));
         }
-        
-        desc.append(String.format("Faixa de referência: %.2f - %.2f %s. ",
-                                  faixa.getMinimo(),
-                                  faixa.getMaximo(),
-                                  faixa.getUnidade()));
-        
-        desc.append(String.format("Desvio de %.1f%%.", percentualDesvio));
-        
+
+        desc.append(String.format("Referencia: %.2f - %.2f %s. ", faixa.getMinimo(), faixa.getMaximo(), faixa.getUnidade()));
+        desc.append(String.format("Desvio: %.1f%%", percentualDesvio));
+
         return desc.toString();
     }
     

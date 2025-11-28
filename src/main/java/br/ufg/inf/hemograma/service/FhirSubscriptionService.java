@@ -17,27 +17,38 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class FhirSubscriptionService {
 
     private static final Logger logger = LoggerFactory.getLogger(FhirSubscriptionService.class);
-    
+
     @Value("${app.hemograma.fhir.server-url}")
     private String fhirServerUrl;
-    
+
     @Value("${server.port}")
     private String applicationPort;
-    
+
+    /**
+     * URL do callback para o HAPI-FHIR chamar nossa aplicação.
+     * - Em Docker: usa o nome do serviço (hemograma-app)
+     * - Local: usa host.docker.internal
+     */
+    @Value("${app.hemograma.fhir.callback-url:#{null}}")
+    private String callbackUrl;
+
+    @Value("${spring.profiles.active:default}")
+    private String activeProfile;
+
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
      * Cria uma subscription no servidor HAPI-FHIR para monitorar novos hemogramas.
-     * 
+     *
      * @return ID da subscription criada ou null se houver erro
      */
     public String criarSubscriptionHemograma() {
         logger.info("Criando subscription para hemogramas no servidor FHIR: {}", fhirServerUrl);
-        
+
         try {
-            // Monta o endpoint da aplicação
-            String endpointUrl = String.format("http://host.docker.internal:%s/hemograma-api/hemogramas/receber", applicationPort);
+            // Monta o endpoint da aplicação baseado no ambiente
+            String endpointUrl = determinarEndpointCallback();
             
             // Cria o JSON da subscription
             String subscriptionJson = criarJsonSubscription(endpointUrl);
@@ -193,19 +204,49 @@ public class FhirSubscriptionService {
      */
     public boolean testarConectividade() {
         logger.info("Testando conectividade com servidor FHIR: {}", fhirServerUrl);
-        
+
         try {
             String url = fhirServerUrl + "/metadata";
             ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
-            
+
             boolean conectado = response.getStatusCode() == HttpStatus.OK;
             logger.info("Conectividade com FHIR: {}", conectado ? "OK" : "FALHA");
-            
+
             return conectado;
-            
+
         } catch (Exception e) {
             logger.error("Erro ao testar conectividade: {}", e.getMessage());
             return false;
         }
+    }
+
+    /**
+     * Determina a URL de callback baseado no ambiente de execução.
+     *
+     * - Se callbackUrl está configurado, usa ele
+     * - Se profile é "docker", usa o nome do serviço Docker
+     * - Caso contrário, usa host.docker.internal (para desenvolvimento local)
+     */
+    private String determinarEndpointCallback() {
+        // Se há uma URL de callback configurada explicitamente, usa ela
+        if (callbackUrl != null && !callbackUrl.isEmpty()) {
+            logger.info("Usando callback URL configurado: {}", callbackUrl);
+            return callbackUrl;
+        }
+
+        String endpoint;
+
+        // Se está rodando no Docker, usa o nome do serviço
+        if ("docker".equalsIgnoreCase(activeProfile)) {
+            // Dentro do Docker, o HAPI-FHIR pode acessar nossa app pelo nome do serviço
+            endpoint = String.format("http://hemograma-app:%s/hemograma-api/hemogramas/receber", applicationPort);
+            logger.info("Ambiente Docker detectado. Usando endpoint: {}", endpoint);
+        } else {
+            // Desenvolvimento local: app roda fora do Docker, HAPI-FHIR dentro
+            endpoint = String.format("http://host.docker.internal:%s/hemograma-api/hemogramas/receber", applicationPort);
+            logger.info("Ambiente local detectado. Usando endpoint: {}", endpoint);
+        }
+
+        return endpoint;
     }
 }
