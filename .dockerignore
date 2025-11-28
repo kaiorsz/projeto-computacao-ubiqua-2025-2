@@ -1,0 +1,53 @@
+# ============================================
+# Docker Ignore - Hemograma Ubíquo
+# ============================================
+
+# Diretórios de build
+target/
+build/
+out/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+.project
+.classpath
+.settings/
+
+# Git
+.git/
+.gitignore
+
+# Logs
+*.log
+logs/
+
+# Arquivos temporários
+*.tmp
+*.temp
+*.bak
+
+# Documentação (não necessária no container)
+*.md
+docs/
+
+# Scripts de desenvolvimento
+scripts/
+
+# Arquivos de configuração local
+*.local
+.env.local
+
+# Node modules (se houver frontend)
+node_modules/
+
+# Arquivos de teste
+src/test/
+
+# Arquivos do sistema
+.DS_Store
+Thumbs.db
+

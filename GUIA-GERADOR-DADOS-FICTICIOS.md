@@ -1,40 +1,40 @@
-# ? Guia do Gerador de Dados Fictícios
+# Guia do Gerador de Dados Ficticios
 
-## ? **O QUE FAZ:**
+## **O QUE FAZ:**
 
 O gerador cria automaticamente:
-- ? **10 pacientes** fictícios (nomes, gênero, idade aleatórios)
-- ? **5 hemogramas por paciente** (total: 50 hemogramas)
-- ? **40% dos hemogramas com desvios** (incluindo anemia)
-- ? **Dados realistas** com valores dentro e fora das faixas normais
+- **10 pacientes** ficticios (nomes, genero, idade aleatorios)
+- **5 hemogramas por paciente** (total: 50 hemogramas)
+- **40% dos hemogramas com desvios** (incluindo anemia)
+- **Dados realistas** com valores dentro e fora das faixas normais
 
 ---
 
-## ? **COMO USAR:**
+## **COMO USAR:**
 
-### **Pré-requisitos:**
-1. ? HAPI-FHIR rodando (`docker-compose up -d`)
-2. ? Aplicação Spring Boot rodando (`mvn spring-boot:run`)
-3. ? Subscription criada
-4. ? Python 3.x instalado
+### **Pre-requisitos:**
+1. HAPI-FHIR rodando (`docker-compose up -d`)
+2. Aplicacao Spring Boot rodando (`mvn spring-boot:run`)
+3. Subscription criada
+4. Python 3.x instalado
 
 ---
 
-### **Opção 1: Script Automático (Windows)**
+### **Opcao 1: Script Automatico (Windows)**
 
 ```bash
 cd scripts
 gerar-hemogramas.bat
 ```
 
-O script irá:
-1. Verificar se Python está instalado
-2. Instalar dependências (requests)
+O script ira:
+1. Verificar se Python esta instalado
+2. Instalar dependencias (requests)
 3. Executar o gerador
 
 ---
 
-### **Opção 2: Python Direto**
+### **Opcao 2: Python Direto**
 
 ```bash
 cd scripts
@@ -43,55 +43,119 @@ python gerar-hemogramas-ficticios.py
 
 ---
 
-## ? **SAÍDA ESPERADA:**
+## **SAIDA ESPERADA:**
 
 ```
 ============================================================
-? GERADOR DE HEMOGRAMAS FICTÍCIOS
-============================================================
-Servidor FHIR: http://localhost:8080/fhir
-Pacientes: 10
-Hemogramas por paciente: 5
+GERADOR DE HEMOGRAMAS FICTICIOS
+Sistema de Analise de Hemogramas - UFG
 ============================================================
 
-? Criando paciente 1/10: João Silva (male)
-   ? Paciente criado: ID 1
-   ? Hemograma 1/5 criado ? (normal)
-   ? Hemograma 2/5 criado ?? (com desvio)
-   ? Hemograma 3/5 criado ? (normal)
-   ? Hemograma 4/5 criado ?? (com desvio)
-   ? Hemograma 5/5 criado ? (normal)
-
-? Criando paciente 2/10: Maria Santos (female)
-   ? Paciente criado: ID 2
-   ? Hemograma 1/5 criado ?? (com desvio)
-   ...
+[INFO] Verificando conectividade com HAPI-FHIR...
+[OK] HAPI-FHIR acessivel em http://localhost:8080/fhir
 
 ============================================================
-? GERAÇÃO CONCLUÍDA!
+CRIANDO PACIENTES
 ============================================================
+
+[1/10] Criando paciente: Maria Santos
+  [OK] Paciente criado com ID: 1
+
+[2/10] Criando paciente: Joao Silva
+  [OK] Paciente criado com ID: 2
+
+... (continua para todos os 10 pacientes)
+
+============================================================
+CRIANDO HEMOGRAMAS
+============================================================
+
+[Paciente 1 - Maria Santos]
+  Hemograma 1/5: Valores NORMAIS
+    Leucocitos: 7500 /uL
+    Hemoglobina: 14.2 g/dL
+    Plaquetas: 250000 /uL
+    Hematocrito: 42%
+  [OK] Observation criada com ID: 1
+
+  Hemograma 2/5: Valores com DESVIO (Anemia)
+    Leucocitos: 6800 /uL
+    Hemoglobina: 9.5 g/dL  [BAIXO]
+    Plaquetas: 180000 /uL
+    Hematocrito: 32%  [BAIXO]
+  [OK] Observation criada com ID: 2
+
+... (continua para todos os hemogramas)
+
+============================================================
+RESUMO
+============================================================
+
+Total de pacientes criados: 10
 Total de hemogramas criados: 50
-Hemogramas com desvios: 20
-Hemogramas normais: 30
+Hemogramas com valores normais: 30 (60%)
+Hemogramas com desvios: 20 (40%)
+
+Tipos de desvios gerados:
+  - Anemia (hemoglobina baixa): 8
+  - Leucocitose (leucocitos altos): 5
+  - Leucopenia (leucocitos baixos): 4
+  - Trombocitopenia (plaquetas baixas): 3
+
+============================================================
+GERACAO CONCLUIDA COM SUCESSO!
 ============================================================
 ```
 
 ---
 
-## ? **VERIFICAR RESULTADOS:**
+## **VALORES DE REFERENCIA USADOS:**
 
-### **1. Logs da Aplicação Spring Boot:**
+| Parametro | Minimo | Maximo | Unidade |
+|-----------|--------|--------|---------|
+| Leucocitos | 4.000 | 11.000 | /uL |
+| Hemoglobina | 12.0 | 17.5 | g/dL |
+| Plaquetas | 150.000 | 450.000 | /uL |
+| Hematocrito | 36 | 52 | % |
 
-Você verá logs como:
+---
+
+## **TIPOS DE DESVIOS GERADOS:**
+
+### **Anemia:**
+- Hemoglobina < 12.0 g/dL
+- Hematocrito < 36%
+
+### **Leucocitose:**
+- Leucocitos > 11.000 /uL
+
+### **Leucopenia:**
+- Leucocitos < 4.000 /uL
+
+### **Trombocitopenia:**
+- Plaquetas < 150.000 /uL
+
+### **Trombocitose:**
+- Plaquetas > 450.000 /uL
+
+---
+
+## **VERIFICAR DADOS GERADOS:**
+
+### **No HAPI-FHIR:**
+
+```bash
+# Listar todos os pacientes
+curl "http://localhost:8080/fhir/Patient?_pretty=true"
+
+# Listar todas as observations
+curl "http://localhost:8080/fhir/Observation?_pretty=true"
+
+# Buscar observations de um paciente especifico
+curl "http://localhost:8080/fhir/Observation?subject=Patient/1&_pretty=true"
 ```
-? Processando Observation: 1
-? Hemograma salvo: ID 1
-? ALERTA: Hemoglobina - Leve
-```
 
-### **2. Console H2:**
-
-Abra: `http://localhost:8081/hemograma-api/h2-console`
+### **No Console H2:**
 
 ```sql
 -- Ver todos os pacientes
@@ -100,136 +164,150 @@ SELECT * FROM PACIENTES;
 -- Ver todos os hemogramas
 SELECT * FROM HEMOGRAMAS;
 
--- Ver todos os desvios (incluindo anemia)
+-- Ver todos os desvios detectados
 SELECT * FROM DESVIOS;
 
--- Contar desvios por tipo
-SELECT TIPO_PARAMETRO, COUNT(*) 
-FROM DESVIOS 
-GROUP BY TIPO_PARAMETRO;
-
--- Ver casos de anemia
-SELECT * FROM DESVIOS 
-WHERE TIPO_PARAMETRO = 'HEMOGLOBINA' 
-AND VALOR_ENCONTRADO < VALOR_REFERENCIA_MINIMO;
+-- Ver hemogramas com desvios
+SELECT h.*, d.tipo_parametro, d.severidade 
+FROM HEMOGRAMAS h 
+JOIN DESVIOS d ON h.id = d.hemograma_id;
 ```
 
 ---
 
-## ?? **PERSONALIZAR:**
+## **PERSONALIZACAO:**
 
-Edite `gerar-hemogramas-ficticios.py`:
+### **Alterar quantidade de pacientes:**
+
+Edite o arquivo `scripts/gerar-hemogramas-ficticios.py`:
 
 ```python
-# Linha 11-12: Alterar quantidade
-NUM_PACIENTES = 20  # Aumentar para 20 pacientes
-NUM_HEMOGRAMAS_POR_PACIENTE = 10  # 10 hemogramas cada
+# Linha ~20
+NUM_PACIENTES = 10  # Altere para o numero desejado
+```
 
-# Linha 73: Alterar chance de desvio
-if com_desvio and random.random() < 0.5:  # 50% de chance
+### **Alterar quantidade de hemogramas por paciente:**
+
+```python
+# Linha ~21
+HEMOGRAMAS_POR_PACIENTE = 5  # Altere para o numero desejado
+```
+
+### **Alterar percentual de desvios:**
+
+```python
+# Linha ~22
+PERCENTUAL_DESVIOS = 0.4  # 40% - Altere para o percentual desejado
 ```
 
 ---
 
-## ? **PARÂMETROS GERADOS:**
+## **SOLUCAO DE PROBLEMAS:**
 
-| Parâmetro | Código LOINC | Unidade | Faixa Normal |
-|-----------|--------------|---------|--------------|
-| Hemoglobina | 718-7 | g/dL | 12.0-18.0 |
-| Leucócitos | 6690-2 | /?L | 4,000-11,000 |
-| Plaquetas | 777-3 | /?L | 150,000-450,000 |
-| Hematócrito | 4544-3 | % | 36-52 |
-| Eritrócitos | 789-8 | milhões/?L | 4.0-6.0 |
+### **Erro: "Connection refused"**
 
----
+O HAPI-FHIR nao esta rodando.
 
-## ? **DETECÇÃO DE ANEMIA:**
-
-O gerador cria casos de anemia com:
-- **Mulheres:** Hemoglobina < 12.0 g/dL
-- **Homens:** Hemoglobina < 13.5 g/dL
-
-Valores gerados para anemia:
-- Mulheres: 8.0 - 11.9 g/dL
-- Homens: 8.0 - 13.4 g/dL
-
----
-
-## ?? **TROUBLESHOOTING:**
-
-### **Erro: Python não encontrado**
+**Solucao:**
 ```bash
-# Instale Python 3.x
-https://www.python.org/downloads/
+docker-compose up -d
+# Aguarde 30 segundos
+curl http://localhost:8080/fhir/metadata
 ```
 
-### **Erro: requests não encontrado**
+### **Erro: "Python not found"**
+
+Python nao esta instalado ou nao esta no PATH.
+
+**Solucao:**
+1. Instale Python 3.x de https://python.org
+2. Marque "Add Python to PATH" durante a instalacao
+3. Reinicie o terminal
+
+### **Erro: "ModuleNotFoundError: requests"**
+
+Biblioteca requests nao esta instalada.
+
+**Solucao:**
 ```bash
 pip install requests
 ```
 
-### **Erro: Connection refused**
-```bash
-# Verifique se HAPI-FHIR está rodando
-docker ps
+### **Erro: "Subscription not found"**
 
-# Se não estiver, inicie:
+A subscription nao foi criada.
+
+**Solucao:**
+```bash
+curl -X POST "http://localhost:8081/hemograma-api/fhir-management/subscription/criar"
+```
+
+---
+
+## **LIMPAR DADOS E RECOMECAR:**
+
+### **Limpar apenas HAPI-FHIR:**
+
+```bash
+# Parar containers
+docker-compose down
+
+# Remover volume do PostgreSQL
+docker volume rm hapi-fhir-postgres-data
+
+# Reiniciar
 docker-compose up -d
 ```
 
-### **Erro: 404 Not Found**
+### **Limpar tudo (incluindo aplicacao):**
+
 ```bash
-# Verifique a URL do servidor FHIR
-# Deve ser: http://localhost:8080/fhir
+docker-compose down -v
+docker-compose up --build -d
 ```
 
 ---
 
-## ? **CASOS DE USO:**
+## **INTEGRACAO COM A APLICACAO:**
 
-1. **Teste de Carga:** Gerar 100+ hemogramas
-2. **Teste de Anemia:** Verificar detecção automática
-3. **Teste de Persistência:** Verificar salvamento no banco
-4. **Teste de Análise:** Verificar cálculo de severidade
-5. **Demonstração:** Mostrar sistema funcionando
+Quando o gerador cria uma Observation no HAPI-FHIR:
 
----
+1. HAPI-FHIR detecta a nova Observation
+2. HAPI-FHIR envia notificacao para a aplicacao (via Subscription)
+3. Aplicacao recebe a notificacao no endpoint `/hemogramas/receber`
+4. Aplicacao faz parsing da Observation usando HAPI-FHIR
+5. Aplicacao analisa os valores e detecta desvios
+6. Aplicacao salva no banco H2
+7. Se houver desvio critico, gera alerta
 
-## ? **EXEMPLO DE HEMOGRAMA GERADO:**
-
-```json
-{
-  "resourceType": "Observation",
-  "status": "final",
-  "category": [{
-    "coding": [{
-      "system": "http://terminology.hl7.org/CodeSystem/observation-category",
-      "code": "laboratory"
-    }]
-  }],
-  "code": {
-    "coding": [{
-      "system": "http://loinc.org",
-      "code": "58410-2",
-      "display": "Complete blood count panel"
-    }]
-  },
-  "subject": {"reference": "Patient/1"},
-  "effectiveDateTime": "2025-01-15T10:30:00Z",
-  "component": [
-    {
-      "code": {"coding": [{"system": "http://loinc.org", "code": "718-7"}]},
-      "valueQuantity": {"value": 10.5, "unit": "g/dL"}
-    },
-    {
-      "code": {"coding": [{"system": "http://loinc.org", "code": "6690-2"}]},
-      "valueQuantity": {"value": 7500, "unit": "/?L"}
-    }
-  ]
-}
+**Verifique os logs da aplicacao:**
+```bash
+docker-compose logs -f hemograma-app
 ```
 
 ---
 
-**Execute o gerador e veja o sistema em ação!** ?
+## **RESUMO DE COMANDOS:**
+
+```bash
+# Gerar dados (Windows)
+cd scripts
+gerar-hemogramas.bat
+
+# Gerar dados (Python direto)
+python scripts/gerar-hemogramas-ficticios.py
+
+# Ver logs da aplicacao
+docker-compose logs -f hemograma-app
+
+# Listar pacientes criados
+curl "http://localhost:8080/fhir/Patient?_pretty=true"
+
+# Listar observations criadas
+curl "http://localhost:8080/fhir/Observation?_pretty=true"
+```
+
+---
+
+**Execute o gerador e verifique os logs da aplicacao!**
 

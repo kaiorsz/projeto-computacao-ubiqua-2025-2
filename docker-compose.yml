@@ -1,9 +1,18 @@
-# Remova a linha `version: '3.7'` para evitar o aviso.
+# ============================================
+# Docker Compose - Sistema de Análise de Hemogramas
+# ============================================
+# Serviços:
+#   - fhir: Servidor HAPI-FHIR (porta 8080)
+#   - db: PostgreSQL para HAPI-FHIR
+#   - hemograma-app: Aplicação Spring Boot (porta 8081)
+# ============================================
 
 services:
+  # ============================================
   # Serviço do servidor HAPI-FHIR
+  # ============================================
   fhir:
-    container_name: hapi-fhir-jpaserver-start
+    container_name: hapi-fhir-jpaserver
     image: hapiproject/hapi:latest
     restart: on-failure
     environment:
@@ -18,8 +27,18 @@ services:
       - "8080:8080"
     depends_on:
       - db
+    networks:
+      - hemograma-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/fhir/metadata"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
-  # Serviço do banco de dados PostgreSQL
+  # ============================================
+  # Serviço do banco de dados PostgreSQL (para HAPI-FHIR)
+  # ============================================
   db:
     image: postgres:15-alpine
     container_name: hapi-fhir-postgres
@@ -29,9 +48,56 @@ services:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin
     volumes:
-      # Use o nome do volume definido abaixo
       - hapi-fhir-postgres-data:/var/lib/postgresql/data
+    networks:
+      - hemograma-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d hapi"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-# A definição do volume deve estar no mesmo nível de "services"
+  # ============================================
+  # Aplicação Spring Boot - Hemograma Ubíquo
+  # ============================================
+  hemograma-app:
+    container_name: hemograma-ubiquo-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: on-failure
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - JAVA_OPTS=-Xms256m -Xmx512m
+    ports:
+      - "8081:8081"
+    volumes:
+      # Volume para persistir dados do H2
+      - hemograma-data:/app/data
+    depends_on:
+      fhir:
+        condition: service_healthy
+    networks:
+      - hemograma-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8081/hemograma-api/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+# ============================================
+# Redes
+# ============================================
+networks:
+  hemograma-network:
+    driver: bridge
+
+# ============================================
+# Volumes
+# ============================================
 volumes:
   hapi-fhir-postgres-data:
+    name: hapi-fhir-postgres-data
+  hemograma-data:
+    name: hemograma-app-data
